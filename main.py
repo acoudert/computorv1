@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 from sys import argv, exit, stderr
-from parser import Parser
-from interpreter import Interpreter
+from options import Options
 from solver import Solver
 
 def main():
@@ -10,10 +9,12 @@ def main():
         print("Invalid number of arguments", file=stderr)
         exit(1)
     try:
-        parser = Parser(argv[1])
-        interpreter = Interpreter(parser)
-        left, right = interpreter.interpret()
-        solver = Solver(left, right)
+        options = Options(argv)
+        solver = Solver(argv[1])
+        solver.printReduced()
+        solver.printPolynomialDegree()
+        solver.printDiscriminant()
+        solver.printSolution()
     except Exception as e:
         print(e)
 

@@ -1,52 +1,58 @@
-from parser import Token, BinOp, Num, XPower
+from tokenizer import INTEGER, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token
+from parser import BinOp, Num, XPower, Parser
 
-INTEGER, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF = (
-    "INTEGER", "XPOWER", "PLUS", "MINUS", "MUL", "DIV", "EQUAL", "EOF"
-)
-operators = "+-*/="
-
-class NodeVisitor:
-    def visit(self, node, desc):
-        # Return Node
-        if node == None and desc == "left": # allow -1= and -1+= handling
-            return Num(Token(INTEGER, 0))
-        method_name = 'visit_' + type(node).__name__
-        visitor = getattr(self, method_name, self.error)
-        return visitor(node, desc)
-
+class Interpreter:
+    def __init__(self, eq):
+        self.parser = Parser(eq)
+    
     def error(self, *args):
         raise Exception("Invalid equation")
-
-class Interpreter(NodeVisitor):
-    def __init__(self, parser):
-        self.parser = parser
 
     def interpret(self):
         self.root = self.parser.parse()
         if self.root.token.type != EQUAL:
             self.error()
-        self.left = self.build(self.root.left, "left")
-        self.right = self.build(self.root.right, "right")
+        self.left = self.__build(self.root.left, "left")
+        self.right = self.__build(self.root.right, "right")
+        self.__updateLeftRightSize()
         print(self.left, self.right)
         print("------")
         return (self.left, self.right)
 
-    def build(self, node, desc):
-        self.arr = [0, 0, 0]
-        n = self.visit(node, desc)
+    # Privates
+    def __updateLeftRightSize(self):
+        length = len(self.left) if len(self.left) > len(self.right) else len(self.right)
+        [arr.append(0) for arr in (self.left, self.right) for _ in range(len(arr), length)]
+
+    def __build(self, node, desc):
+        self.arr = [0]
+        n = self.__visit(node, desc)
         if n.token.type == INTEGER: # Get finale value as recursion returns node
             self.arr[0] += n.token.value
         else:
+            self.__updateArrSize(n)
             self.arr[n.token.value] += n.times
         return self.arr
+    
+    def __updateArrSize(self, node):
+        [self.arr.append(0) for _ in range(len(self.arr), node.token.value + 1)]
 
-    def visit_BinOp(self, node, desc):
+    def __visit(self, node, desc):
+        # Return Node
+        if node == None and desc == "left": # allow -1= and -1+= handling
+            return Num(Token(INTEGER, 0))
+        method_name = '_Interpreter__visit_' + type(node).__name__
+        visitor = getattr(self, method_name, self.error)
+        return visitor(node, desc)
+
+    def __visit_BinOp(self, node, desc):
         # Left and Right updates themselves based on int+int or int+Xpower recursively
-        node.left = self.visit(node.left, "left")
-        node.right = self.visit(node.right, "right")
+        node.left = self.__visit(node.left, "left")
+        node.right = self.__visit(node.right, "right")
         if node.token.type == PLUS:
             for n in [node.left, node.right]:
                 if n.token.type == XPOWER:
+                    self.__updateArrSize(n)
                     self.arr[n.token.value] += n.times
                 elif n.token.type == INTEGER:
                     self.arr[0] += n.token.value
@@ -54,6 +60,7 @@ class Interpreter(NodeVisitor):
         elif node.token.type == MINUS:
             for n in [node.left, node.right]:
                 if n.token.type == XPOWER:
+                    self.__updateArrSize(n)
                     self.arr[n.token.value] -= n.times
                 elif n.token.type == INTEGER:
                     self.arr[0] += n.token.value * (-1) if n == node.right else n.token.value # first term not to substract
@@ -77,10 +84,8 @@ class Interpreter(NodeVisitor):
             else:
                 self.error()
 
-    def visit_Num(self, node, desc):
+    def __visit_Num(self, node, desc):
         return node
 
-    def visit_XPower(self, node, desc):
-        if node.token.value < 0 or node.token.value > 2:
-            self.error()
+    def __visit_XPower(self, node, desc):
         return node
