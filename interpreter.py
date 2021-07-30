@@ -1,4 +1,4 @@
-from tokenizer import INTEGER, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token
+from tokenizer import FLOAT, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token
 from parser import BinOp, Num, XPower, Parser
 
 class Interpreter:
@@ -12,11 +12,9 @@ class Interpreter:
         self.root = self.parser.parse()
         if self.root.token.type != EQUAL:
             self.error()
-        self.left = self.__build(self.root.left, "left")
+        self.left = self.__build(self.root.left, "right") # Check if eq is "=..."
         self.right = self.__build(self.root.right, "right")
         self.__updateLeftRightSize()
-        print(self.left, self.right)
-        print("------")
         return (self.left, self.right)
 
     # Privates
@@ -27,7 +25,7 @@ class Interpreter:
     def __build(self, node, desc):
         self.arr = [0]
         n = self.__visit(node, desc)
-        if n.token.type == INTEGER: # Get finale value as recursion returns node
+        if n.token.type == FLOAT: # Get finale value as recursion returns node
             self.arr[0] += n.token.value
         else:
             self.__updateArrSize(n)
@@ -40,7 +38,7 @@ class Interpreter:
     def __visit(self, node, desc):
         # Return Node
         if node == None and desc == "left": # allow -1= and -1+= handling
-            return Num(Token(INTEGER, 0))
+            return Num(Token(FLOAT, 0))
         method_name = '_Interpreter__visit_' + type(node).__name__
         visitor = getattr(self, method_name, self.error)
         return visitor(node, desc)
@@ -54,32 +52,32 @@ class Interpreter:
                 if n.token.type == XPOWER:
                     self.__updateArrSize(n)
                     self.arr[n.token.value] += n.times
-                elif n.token.type == INTEGER:
+                elif n.token.type == FLOAT:
                     self.arr[0] += n.token.value
-            return Num(Token(INTEGER, 0)) 
+            return Num(Token(FLOAT, 0)) 
         elif node.token.type == MINUS:
             for n in [node.left, node.right]:
                 if n.token.type == XPOWER:
                     self.__updateArrSize(n)
-                    self.arr[n.token.value] -= n.times
-                elif n.token.type == INTEGER:
+                    self.arr[n.token.value] += n.times * (-1) if n == node.right else n.times
+                elif n.token.type == FLOAT:
                     self.arr[0] += n.token.value * (-1) if n == node.right else n.token.value # first term not to substract
-            return Num(Token(INTEGER, 0)) 
+            return Num(Token(FLOAT, 0)) 
         elif node.token.type == MUL:
-            if node.left.token.type == INTEGER and node.right.token.type == INTEGER:
-                return Num(Token(INTEGER, node.left.token.value * node.right.token.value))
-            elif node.left.token.type == XPOWER and node.right.token.type == INTEGER:
+            if node.left.token.type == FLOAT and node.right.token.type == FLOAT:
+                return Num(Token(FLOAT, node.left.token.value * node.right.token.value))
+            elif node.left.token.type == XPOWER and node.right.token.type == FLOAT:
                 return XPower(Token(XPOWER, node.left.token.value), node.left.times * node.right.token.value)
-            elif node.left.token.type == INTEGER and node.right.token.type == XPOWER:
+            elif node.left.token.type == FLOAT and node.right.token.type == XPOWER:
                 return XPower(Token(XPOWER, node.right.token.value), node.right.times * node.left.token.value)
             else:
                 self.error()
         elif node.token.type == DIV:
-            if node.left.token.type == INTEGER and node.right.token.type == INTEGER:
-                return Num(Token(INTEGER, node.left.token.value / node.right.token.value))
-            elif node.left.token.type == XPOWER and node.right.token.type == INTEGER:
+            if node.left.token.type == FLOAT and node.right.token.type == FLOAT:
+                return Num(Token(FLOAT, node.left.token.value / node.right.token.value))
+            elif node.left.token.type == XPOWER and node.right.token.type == FLOAT:
                 return XPower(Token(XPOWER, node.left.token.value), node.left.times / node.right.token.value)
-            elif node.left.token.type == INTEGER and node.right.token.type == XPOWER:
+            elif node.left.token.type == FLOAT and node.right.token.type == XPOWER:
                 return XPower(Token(XPOWER, node.right.token.value), node.right.times / node.left.token.value)
             else:
                 self.error()

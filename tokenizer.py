@@ -1,5 +1,5 @@
-INTEGER, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF = (
-    "INTEGER", "XPOWER", "PLUS", "MINUS", "MUL", "DIV", "EQUAL", "EOF"
+FLOAT, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF = (
+    "FLOAT", "XPOWER", "PLUS", "MINUS", "MUL", "DIV", "EQUAL", "EOF"
 )
 operators = "+-*/="
 
@@ -15,7 +15,7 @@ class Token:
 # Tokenizer
 class Tokenizer:
     def __init__(self, eq):
-        self.eq = eq
+        self.eq = eq.replace(' ', '')
         self.i = 0
         self.char = self.eq[self.i]
 
@@ -25,7 +25,7 @@ class Tokenizer:
     def extract_token(self):
         while self.char:
             if self.char.isdigit():
-                return Token(INTEGER, self.__integer())
+                return Token(FLOAT, self.__float())
             elif self.char == "X":
                 return Token(XPOWER, self.__xpower())
             elif self.char == '+':
@@ -51,12 +51,18 @@ class Tokenizer:
         self.i += 1
         self.char = self.eq[self.i] if self.i <= len(self.eq) - 1 else None
 
-    def __integer(self):
+    def __float(self):
         res = ""
         while self.char and self.char.isdigit():
             res += self.char
             self.__advance()
-        return int(res)
+            if self.char == '.':
+                if res.count('.') != 0:
+                    self.error()
+                res += self.char
+                self.__advance()
+        res = float(res)
+        return int(res) if res.is_integer() else res 
 
     def __xpower(self):
         self.__advance()
@@ -64,7 +70,7 @@ class Tokenizer:
             return 1
         if self.char == '^':
             self.__advance()
-            return self.__integer()
+            return self.__float()
         elif self.char in operators:
             return 1
         self.error()

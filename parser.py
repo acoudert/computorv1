@@ -1,4 +1,4 @@
-from tokenizer import INTEGER, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token, Tokenizer
+from tokenizer import FLOAT, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token, Tokenizer
 
 # Nodes
 class BinOp:
@@ -38,7 +38,7 @@ class Parser:
     # Privates
     def __priority1(self):
         token = self.token
-        if token.type == INTEGER:
+        if token.type == FLOAT:
             self.token = self.tokenizer.extract_token()
             return Num(token)
         elif token.type == XPOWER:

@@ -10,7 +10,7 @@ class Solver:
         self.reduced = self.__calculateReduced()
         self.degree = self.__calculateDegree()
         self.solution = self.__calculateSolution()
-        self.width = 23 if self.solution[0] is "The two solutions are:" else self.width
+        self.width = 23 if self.solution[0] == "The two solutions are:" else self.width
 
     def printReduced(self):
         out = []
@@ -49,6 +49,12 @@ class Solver:
             i -= 1
         return i
     
+    def __calculateDiscriminant(self):
+        discriminant = float(self.reduced[1] ** 2 - 4 * self.reduced[0] * self.reduced[2])
+        if discriminant.is_integer():
+            return int(discriminant)
+        return dicriminant
+    
     def __calculateSolution(self):
         if self.__allRealsSolution():
             return ("The solutions are:", ["All real numbers - R"])
@@ -76,28 +82,32 @@ class Solver:
 
     def __solveDegreeOne(self):
         sol = (-1) * self.reduced[0] / self.reduced[1]
-        return ("The solution is:", ["{:+}".format(sol)])
+        sol = int(sol) if sol.is_integer() else sol
+        sol = "{:+}".format(sol) if sol is not 0 else str(sol)
+        return ("The solution is:", [sol])
 
-    def __calculateDiscriminant(self):
-        return self.reduced[1] ** 2 - 4 * self.reduced[0] * self.reduced[2]
-    
     def __solvePositive(self):
         sola = ((-1) * self.reduced[1] + self.discriminant ** (1/2)) / (2 * self.reduced[2])
         solb = ((-1) * self.reduced[1] - self.discriminant ** (1/2)) / (2 * self.reduced[2])
-        return ("The two solutions are:", ["{:+}".format(sola), "{:+}".format(solb)])
+        sola = int(sola) if sola.is_integer() else sola
+        solb = int(solb) if solb.is_integer() else solb
+        sola = "{:+}".format(sola) if sola is not 0 else str(sola)
+        solb = "{:+}".format(solb) if solb is not 0 else str(solb)
+        return ("The two solutions are:", [sola, solb])
     
     def __solveZero(self):
         sol = ((-1) * self.reduced[1]) / (2 * self.reduced[2])
-        return ("The solution is:", ["{:+}".format(sol)])
+        sol = int(sol) if sol.is_integer() else sol
+        sol = "{:+}".format(sol) if sol is not 0 else str(sol)
+        return ("The solution is:", [sol])
 
     def __solveNegative(self):
         real = ((-1) * self.reduced[1]) / (2 * self.reduced[2])
         imag = ((-1) * self.discriminant) ** (1/2) / (2 * self.reduced[2])
         sola = complex(real, imag)
         solb = complex(real, (-1) * imag)
-        return ("The two solutions are:", ["{:+}".format(sola)[1:-1], "{:+}".format(solb)[1:-1]])
-    
-
-
-
-
+        sola = "{:+}".format(sola)
+        solb = "{:+}".format(solb)
+        sola = sola[1:-1] if sola[0] == "(" else sola
+        solb = solb[1:-1] if solb[0] == "(" else solb
+        return ("The two solutions are:", [sola, solb])
