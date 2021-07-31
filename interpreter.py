@@ -1,21 +1,27 @@
 from tokenizer import FLOAT, XPOWER, PLUS, MINUS, MUL, DIV, EQUAL, EOF, Token
-from parser import BinOp, Num, XPower, Parser
+from parser import BinOp, Num, XPower
 
 class Interpreter:
-    def __init__(self, eq):
-        self.parser = Parser(eq)
+    def __init__(self, parser):
+        self.parser = parser
+        self.root = self.parser.parse()
     
     def error(self, *args):
         raise Exception("Invalid equation")
 
     def interpret(self):
-        self.root = self.parser.parse()
         if self.root.token.type != EQUAL:
             self.error()
         self.left = self.__build(self.root.left, "right") # Check if eq is "=..."
         self.right = self.__build(self.root.right, "right")
         self.__updateLeftRightSize()
         return (self.left, self.right)
+    
+    def displayLeftRight(self):
+        print("INTERPRETER:")
+        print("left: ", self.left)
+        print("right:", self.right)
+        print()
 
     # Privates
     def __updateLeftRightSize(self):
@@ -70,8 +76,6 @@ class Interpreter:
                 return XPower(Token(XPOWER, node.left.token.value), node.left.times * node.right.token.value)
             elif node.left.token.type == FLOAT and node.right.token.type == XPOWER:
                 return XPower(Token(XPOWER, node.right.token.value), node.right.times * node.left.token.value)
-            else:
-                self.error()
         elif node.token.type == DIV:
             if node.left.token.type == FLOAT and node.right.token.type == FLOAT:
                 return Num(Token(FLOAT, node.left.token.value / node.right.token.value))
@@ -79,8 +83,7 @@ class Interpreter:
                 return XPower(Token(XPOWER, node.left.token.value), node.left.times / node.right.token.value)
             elif node.left.token.type == FLOAT and node.right.token.type == XPOWER:
                 return XPower(Token(XPOWER, node.right.token.value), node.right.times / node.left.token.value)
-            else:
-                self.error()
+        self.error()
 
     def __visit_Num(self, node, desc):
         return node

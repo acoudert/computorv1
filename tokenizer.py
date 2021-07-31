@@ -15,7 +15,7 @@ class Token:
 # Tokenizer
 class Tokenizer:
     def __init__(self, eq):
-        self.eq = eq.replace(' ', '')
+        self.eq = eq.replace(' ', '').upper()
         self.i = 0
         self.char = self.eq[self.i]
 
@@ -27,6 +27,8 @@ class Tokenizer:
             if self.char.isdigit():
                 return Token(FLOAT, self.__float())
             elif self.char == "X":
+                if self.i != 0 and self.eq[self.i-1] not in operators: # 1X^...
+                    self.error()
                 return Token(XPOWER, self.__xpower())
             elif self.char == '+':
                 self.__advance()
@@ -61,6 +63,8 @@ class Tokenizer:
                     self.error()
                 res += self.char
                 self.__advance()
+                if not self.char or not self.char.isdigit(): #...1.
+                    self.error()
         res = float(res)
         return int(res) if res.is_integer() else res 
 
@@ -70,7 +74,12 @@ class Tokenizer:
             return 1
         if self.char == '^':
             self.__advance()
-            return self.__float()
+            if not self.char or not self.char.isdigit(): # X^= || =X^
+                self.error()
+            res = self.__float()
+            if type(res) != int:
+                self.error()
+            return res
         elif self.char in operators:
             return 1
         self.error()

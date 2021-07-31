@@ -22,8 +22,8 @@ class XPower:
 
 # Parser
 class Parser:
-    def __init__(self, eq):
-        self.tokenizer = Tokenizer(eq)
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
         self.token = self.tokenizer.extract_token()
     
     def error(self):
@@ -31,10 +31,13 @@ class Parser:
 
     def parse(self):
         self.root = self.__priority4()
-        self.__printTree(self.root)
-        print("------")
         return self.root
     
+    def displayTree(self):
+        print("PARSER:")
+        self.__printTree(self.root)
+        print()
+
     # Privates
     def __priority1(self):
         token = self.token

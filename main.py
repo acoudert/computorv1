@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
 
-from sys import argv, exit, stderr
+from sys import argv, exit
 from options import Options
+from tokenizer import Tokenizer
+from parser import Parser
+from interpreter import Interpreter
 from solver import Solver
 
 def main():
-    if len(argv) != 2:
-        print("Invalid number of arguments", file=stderr)
+    try:
+        options = Options(argv)
+        tokenizer = Tokenizer(argv[options.eq_index])
+        parser = Parser(tokenizer)
+        interpreter = Interpreter(parser)
+        if options.options["v"][1]:
+            parser.displayTree()
+        solver = Solver(*interpreter.interpret())
+        if options.options["v"][1]:
+            interpreter.displayLeftRight()
+        solver.displayAll(options.options["v"][1], options.options["f"][1])
+    except Exception as e:
+        print(e)
         exit(1)
-#    try:
-    options = Options(argv)
-    solver = Solver(argv[1])
-    solver.printReduced()
-    solver.printPolynomialDegree()
-    solver.printDiscriminant()
-    solver.printSolution()
- #   except Exception as e:
- #       print(e)
 
 if __name__ == "__main__":
     main()
